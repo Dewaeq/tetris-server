@@ -32,7 +32,7 @@ io.on("connection", (socket) => {
     if (succes) {
       console.log(`${userName} joined room ${code}`);
       socket.emit("joined", code);
-      
+
       if (rooms[code].full()) {
         rooms[code].start();
       }
@@ -67,6 +67,6 @@ app.get("/joinRoom", (req, res) => {
   res.send({ code: parseInt(req.query.code) });
 });
 
-server.listen(3030, () => {
-  console.log('listening on *:3030');
+server.listen(process.env.PORT || 3000, () => {
+  console.log('listening on *:', process.env.PORT || 3000);
 });
