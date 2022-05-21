@@ -24,20 +24,18 @@ io.on("connection", (socket) => {
   socket.on("joinRoom", (data) => {
     const code = data.code;
     const userName = data.userName;
+    let isHost = false;
 
-    if (!rooms[code]) {
-      rooms[code] = new Room(code);
+    if (!rooms[code] || rooms[code].isEmpty()) {
+      rooms[code] = new Room(code, socket.id);
+      isHost = true;
     }
 
     const succes = rooms[code].addUser(socket, userName);
 
     if (succes) {
       console.log(`${userName} joined room ${code}`);
-      socket.emit("joined", code);
-
-      if (rooms[code].isFull()) {
-        rooms[code].start();
-      }
+      socket.emit("joined", { code: code, isHost: isHost, users: rooms[code].usersJson() });
     }
   });
 });

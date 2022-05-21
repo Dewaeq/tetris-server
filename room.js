@@ -24,14 +24,16 @@ class User {
 class Room {
     /**
      * @param {Number} code 
+     * @param {String} hostId 
+     * @param {Number} maxSize 
      * @param {User[]} users 
-     * @param {Number} maxLength 
      * @param {Boolean} started 
      */
-    constructor(code, users = [], maxLength = 2, started = false) {
+    constructor(code, hostId, maxSize = 50, users = [], started = false) {
         this.code = code;
+        this.hostId = hostId;
+        this.maxLength = maxSize;
         this.users = users;
-        this.maxLength = maxLength;
         this.started = started;
     }
 
@@ -57,6 +59,7 @@ class Room {
 
     reset() {
         this.users = [];
+        this.hostId = null;
         this.stop();
     }
 
@@ -73,7 +76,18 @@ class Room {
             return false;
         }
 
-        this.users.push(new User(socket, userName));
+        const user = new User(socket, userName);
+        this.users.push(user);
+        this.emitAll("userJoined", user.toJson());
+
+        socket.on("start", () => {
+            if (socket.id !== this.hostId) {
+                console.error("only host can start the game!");
+                return;
+            }
+
+            this.start();
+        });
 
         socket.on("update", (update) => {
             this.emitAll("update", update, [socket.id]);
@@ -81,6 +95,7 @@ class Room {
 
         socket.on("disconnect", () => {
             this.removeUser(socket);
+            delete this;
         });
 
         return true;
@@ -116,13 +131,17 @@ class Room {
         return this.users.length >= this.maxLength;
     }
 
-    
+    isEmpty() {
+        return this.users.length === 0;
+    }
+
     toJson() {
         return {
             code: this.code,
             users: this.usersJson(),
             maxLength: this.maxLength,
             started: this.started,
+            hostId: this.hostId,
         }
     }
 
