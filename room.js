@@ -38,15 +38,15 @@ class Room {
     }
 
     start() {
-        const currentShapeId = rand();
-        const nextShapeId = rand();
+        const bag = getBag();
+        const nextBag = getBag();
         const allUsers = this.usersJson();
 
         for (const user of this.users) {
             user.socket.emit("start", {
                 starterId: this.users[0].socket.id,
-                currentShapeId: currentShapeId,
-                nextShapeId: nextShapeId,
+                bag: bag,
+                nextBag: nextBag,
                 allUsers: allUsers,
             });
         }
@@ -152,4 +152,16 @@ class Room {
 
 module.exports = Room;
 
-const rand = () => Math.floor(Math.random() * 7);
+const getBag = () => {
+    const bag = [0, 1, 2, 3, 4, 5, 6];
+    let currentIndex = bag.length;
+
+    while (currentIndex != 0) {
+        const randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+
+        [bag[currentIndex], bag[randomIndex]] = [bag[randomIndex], bag[currentIndex]];
+    }
+
+    return bag;
+}
